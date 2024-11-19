@@ -6,16 +6,18 @@ import { useEffect, useState } from "react";
 export function SearchBar({ defaultValue }: { defaultValue: string }) {
   const { push } = useRouter();
   const [show_loading, setShowLoading] = useState(false);
+  const [value, setValue] = useState(defaultValue);
 
   useEffect(() => {
     setShowLoading(false);
+    setValue(defaultValue);
   }, [defaultValue]);
 
   return (
     <form
-      onSubmit={async (e: any) => {
+      onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
-        const new_slug = encodeURIComponent(e.target[0]?.value);
+        const new_slug = encodeURIComponent(value);
         setShowLoading(true);
         push(`/${new_slug}`);
       }}
@@ -23,7 +25,8 @@ export function SearchBar({ defaultValue }: { defaultValue: string }) {
     >
       <div className="flex-1 relative">
         <input
-          defaultValue={defaultValue}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
           className="w-full px-2 text-md font-medium bg-gray-100 h-9 rounded-lg text-gray-800"
         />
         <button

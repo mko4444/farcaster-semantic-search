@@ -5,7 +5,7 @@ export default async function DynamicLayout({
   params,
 }: {
   children: React.ReactNode;
-  params: { query: string };
+  params: Promise<{ query: string }>;
 }) {
   return (
     <>

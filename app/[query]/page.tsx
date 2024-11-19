@@ -8,30 +8,26 @@ import { uniq } from "lodash";
 import Link from "next/link";
 import { abbreviateDate } from "@/utils/abbreviate_date";
 
-/** Revalidate once per hour */
-export const revalidate = 60 * 60;
-
-export default async function Page({ params }: { params: { query: string } }) {
-  console.log("params", (await params).query);
-
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ query: string }>;
+}) {
   /** Embed the query */
   const query_embedding = await _embedQuery((await params).query);
 
   /** Call the search_casts function in supabase */
-  const { data = [], error } = await supabase.rpc("search_casts", {
+  const { data = [] } = await supabase.rpc("search_casts", {
     query_embedding,
     match_threshold: 0.4,
     match_count: 100,
   });
-
-  console.log({ data, error });
 
   if (!data?.length) {
     throw new Error("No casts found");
   }
 
   if (data?.length === 0) {
-    error && console.log(error);
     return (
       <div className="w-full h-full max-w-[420px] px-4 gap-2 col">
         <span className="text-gray-700">No casts found</span>
@@ -39,7 +35,7 @@ export default async function Page({ params }: { params: { query: string } }) {
     );
   } else {
     /** Get the array of hashes */
-    const hashes = data?.map(({ hash }: any) => hash) ?? [];
+    const hashes: string[] = data?.map(({ hash }: Cast) => hash) ?? [];
 
     /** Hydrate all casts */
     const { result } = await client.fetchBulkCasts(hashes, {});
@@ -48,8 +44,6 @@ export default async function Page({ params }: { params: { query: string } }) {
     const parent_fids = uniq(
       result.casts.map((cast) => cast.parent_author.fid)
     );
-
-    console.log({ parent_fids });
 
     const parents = await client.fetchBulkUsers(parent_fids.filter(Boolean));
 
@@ -65,6 +59,7 @@ export default async function Page({ params }: { params: { query: string } }) {
           )
           .map(({ text, author, hash, timestamp, parent_author }: Cast) => (
             <Link
+              key={hash}
               href={`https://warpcast.com/${author.username}/${hash.slice(
                 0,
                 10
