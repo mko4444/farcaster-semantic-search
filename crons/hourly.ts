@@ -17,7 +17,15 @@ schedule(interval, async () => {
     .select("id, last_ran_at") // get id and last ran at
     .single();
 
-  const timestamp = dayjs(res.data?.last_ran_at).format() ?? dayjs().valueOf();
+  const timestamp = res.data?.last_ran_at
+    ? dayjs(res.data?.last_ran_at).format()
+    : dayjs()
+        .subtract(1, "hour")
+        .hour(0)
+        .minute(0)
+        .second(0)
+        .millisecond(0)
+        .valueOf();
   const last_ran_at = dayjs().valueOf();
 
   let user_cursor = undefined;
@@ -89,10 +97,14 @@ schedule(interval, async () => {
   } while (user_cursor);
 
   /** Update the last ran at timestamp */
-  await supabase
-    .from("indexer_counter")
-    .update({ last_ran_at })
-    .eq("id", res.data?.id);
+  if (res.data) {
+    await supabase
+      .from("indexer_counter")
+      .update({ last_ran_at })
+      .eq("id", res.data?.id);
+  } else {
+    await supabase.from("indexer_counter").insert({ last_ran_at });
+  }
 
   /** Log the time it took to process */
   console.log(
