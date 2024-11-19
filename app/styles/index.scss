@@ -1,0 +1,81 @@
+@use "layouts";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  height: 100%;
+  height: -moz-available; /* WebKit-based browsers will ignore this. */
+  height: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
+  height: fill-available;
+  @extend .col;
+}
+
+html {
+  overflow: hidden;
+  height: 100%;
+}
+
+* {
+  user-select: none;
+}
+
+select {
+  -o-appearance: none;
+  -ms-appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  outline: none;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  display: none;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes fadeOut {
+  from {
+    opacity: 1;
+  }
+  to {
+    opacity: 0;
+  }
+}
+
+.spin {
+  @apply animate-spin;
+}
+
+.spinning {
+  pointer-events: none;
+
+  svg {
+    animation: spin 1s linear infinite;
+  }
+}
+
+.square {
+  background: #14213d;
+  color: white;
+  box-shadow: inset -4px -4px 12px #05a8aa50;
+  // , inset -4px -6px 12px #e1881b50;
+}

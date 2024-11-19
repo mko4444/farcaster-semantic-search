@@ -1,0 +1,43 @@
+// place in main styles file or import
+
+// examples:
+// - ".row-fs-c" is a row with flex-start on main axis and center on secondary axis
+// - ".col-sb-sb" is a column with space-between on main axis and secondary axis
+// - ".row-sa-fe" is a row with space-around on main axis and flex-end on secondary axis
+// - ".col": is a column with flex-start on main axis and secondary axis
+
+@mixin flex-layout-generator() {
+  $directions: (
+    "row": row,
+    "col": column,
+  );
+  $spacings: (
+    "fs": flex-start,
+    "fe": flex-end,
+    "c": center,
+    "sb": space-between,
+    "sa": space-around,
+  );
+
+  @each $direction, $direction-value in $directions {
+    .#{$direction} {
+      display: flex;
+      flex-direction: $direction-value;
+      justify-content: flex-start;
+      align-items: flex-start;
+    }
+
+    @each $main-axis, $main-value in $spacings {
+      @each $secondary-axis, $secondary-value in $spacings {
+        .#{$direction}-#{$main-axis}-#{$secondary-axis} {
+          display: flex;
+          flex-direction: $direction-value;
+          justify-content: $main-value;
+          align-items: $secondary-value;
+        }
+      }
+    }
+  }
+}
+
+@include flex-layout-generator;

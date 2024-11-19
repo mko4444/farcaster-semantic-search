@@ -1,0 +1,17 @@
+generator client {
+    provider        = "prisma-client-js"
+    previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+    provider   = "postgresql"
+    url        = env("DATABASE_URL")
+    directUrl  = env("DIRECT_URL")
+    extensions = [uuid_ossp(map: "uuid-ossp", schema: "extensions"), vector(schema: "extensions")]
+}
+
+model Cast {
+    hash      String                 @id @unique
+    text      String
+    embedding Unsupported("vector")?
+}
