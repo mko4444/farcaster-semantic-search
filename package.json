@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "indexer:start": "npx tsx indexer/index.ts",
+    "indexer:backfill": "npx tsx indexer/backfill_only.ts",
+    "indexer:cron": "npx tsx indexer/cron_only.ts"
   },
   "dependencies": {
     "@neynar/nodejs-sdk": "^1.71.0",
