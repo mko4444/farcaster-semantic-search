@@ -8,11 +8,13 @@ import dayjs from "@/lib/dayjs";
 /** Cron job should run once per hour */
 const interval = "0 * * * *";
 
+console.log("[HOURLY] Starting hourly indexer");
+
 schedule(interval, async () => {
   /** What was the time of the last cast? */
   const res = await supabase
     .from("indexer_counter")
-    .select("last_ran_at")
+    .select("id, last_ran_at") // get id and last ran at
     .single();
 
   const timestamp = dayjs(res.data?.last_ran_at).format() ?? dayjs().valueOf();
@@ -87,7 +89,10 @@ schedule(interval, async () => {
   } while (user_cursor);
 
   /** Update the last ran at timestamp */
-  await supabase.from("indexer_counter").upsert({ last_ran_at });
+  await supabase
+    .from("indexer_counter")
+    .update({ last_ran_at })
+    .eq("id", res.data?.id);
 
   /** Log the time it took to process */
   console.log(
