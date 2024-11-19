@@ -47,4 +47,10 @@ SUPABASE_ANON_KEY=""
 NEYNAR_KEY=""
 ```
 
-You can now start the indexer. New casts will index every hour, and older casts will start backfilling as soon as you run the function. Backfilling time can vary but will likely take a day or two. You can start querying as soon as the first hourly job runs.
+You can now start the indexer locally by running `npx tsx crons/hourly.ts`. New casts will index every hour, and older casts will start backfilling as soon as you run the function. Backfilling time can vary but will likely take a day or two. You can start querying as soon as the first hourly job runs.
+
+I recommend deploying this project to railway so you don't have to keep it running locally. Make sure to add all your environment variables to the project, and change the custom start function to `npx tsx crons/hourly.ts`. Note that railway often throws a node version error, and if you run into that you can add the following env var to fix it:
+```
+NIXPACKS_NODE_VERSION=20
+```
+
