@@ -3,6 +3,7 @@ import { embedCast } from "@/indexer/helpers/embedCast";
 import supabase from "@/lib/supabase";
 import client from "@/lib/neynar";
 import dayjs from "@/lib/dayjs";
+import { Cast } from "@neynar/nodejs-sdk/build/neynar-api/v2";
 
 const BACKFILL_CHUNK_SIZE = 3;
 
@@ -51,30 +52,71 @@ export async function backfill() {
       let casts_indexed = 0;
 
       do {
-        /** Grab the page of casts */
-        const { casts, next } = await client.fetchCastsForUser(fid, {
-          cursor: user_cast_cursor,
-          limit: 50,
-        });
+        /** Fetch casts with retry */
+        let castsData: any;
+        const maxRetries = 5; // Maximum number of retries
+        let attempt = 0;
+        let success = false;
 
-        /** Iterate over each cast */
-        const embeddings = await Promise.all(casts.map(embedCast));
+        while (attempt < maxRetries && !success) {
+          try {
+            castsData = await client.fetchCastsForUser(fid, {
+              cursor: user_cast_cursor,
+              limit: 50,
+            });
+            success = true; // If successful, exit the retry loop
+          } catch (error: any) {
+            attempt++;
+            console.error(
+              `Error fetching casts for fid ${fid}, attempt ${attempt}:`,
+              error.message || error
+            );
+            if (attempt < maxRetries) {
+              // Wait before retrying (exponential backoff)
+              const delay = Math.pow(2, attempt) * 1000; // 2^attempt seconds
+              await new Promise((resolve) => setTimeout(resolve, delay));
+            } else {
+              console.error(
+                `Failed to fetch casts for fid ${fid} after ${maxRetries} attempts. Skipping to next user.`
+              );
+              return; // Exit the function and proceed to the next fid
+            }
+          }
+        }
 
-        /** Save the embeddings and casts to the database */
-        await supabase.from("casts").upsert(
-          casts.map((cast, i) => ({
-            hash: cast.hash,
-            embedding: embeddings[i],
-            fid,
-            timestamp: dayjs(cast.timestamp).valueOf(),
-            text: cast.text,
-          }))
-        );
+        const { casts, next } = castsData;
+
+        /** Embed and save casts */
+        try {
+          const embeddings = await Promise.all(casts.map(embedCast));
+
+          /** Save the embeddings and casts to the database */
+          await supabase.from("casts").upsert(
+            casts.map((cast: Cast, i: number) => ({
+              hash: cast.hash,
+              embedding: embeddings[i],
+              fid,
+              timestamp: dayjs(cast.timestamp).valueOf(),
+              text: cast.text,
+            }))
+          );
+        } catch (error: any) {
+          console.error(
+            `Error processing casts for fid ${fid}:`,
+            error.message || error
+          );
+          // Decide whether to continue or skip to next fid
+          return;
+        }
 
         /** Set cursor */
         user_cast_cursor = next.cursor;
         casts_indexed += casts.length;
       } while (user_cast_cursor);
+
+      console.log(
+        `[BACKFILL] Processed ${casts_indexed} casts for user ${fid}`
+      );
     }
 
     /** Implement asyncPool to manage concurrency */
