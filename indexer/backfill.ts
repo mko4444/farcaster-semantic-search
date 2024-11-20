@@ -4,7 +4,7 @@ import supabase from "@/lib/supabase";
 import client from "@/lib/neynar";
 import dayjs from "@/lib/dayjs";
 
-const BACKFILL_CHUNK_SIZE = 5;
+const BACKFILL_CHUNK_SIZE = 3;
 
 export async function backfill() {
   let should_run = false;
